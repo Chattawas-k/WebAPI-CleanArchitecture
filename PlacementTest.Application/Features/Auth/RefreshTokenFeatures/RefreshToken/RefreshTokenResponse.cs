@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PlacementTest.Application.Features.RefreshTokenFeatures.RefreshToken
+namespace PlacementTest.Application.Features.Auth.RefreshTokenFeatures.RefreshToken
 {
     public class RefreshTokenResponse
     {

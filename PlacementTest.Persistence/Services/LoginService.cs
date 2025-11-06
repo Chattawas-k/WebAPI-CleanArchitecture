@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using PlacementTest.Application.Common.Services;
-using PlacementTest.Application.Features.LoginFeatures.Login;
-using PlacementTest.Application.Features.RefreshTokenFeatures.RefreshToken;
 using PlacementTest.Domain.Entities;
 using PlacementTest.Persistence.Context;
 using System.IdentityModel.Tokens.Jwt;
@@ -12,6 +10,8 @@ using System.Security.Claims;
 using System.Text;
 using System.Net.Http;
 using System.Text.Json;
+using PlacementTest.Application.Features.Auth.LoginFeatures.Login;
+using PlacementTest.Application.Features.Auth.RefreshTokenFeatures.RefreshToken;
 
 namespace PlacementTest.Persistence.Services
 {
@@ -239,6 +239,41 @@ namespace PlacementTest.Persistence.Services
                 }
             }
             return keys;
+        }
+
+        public async Task<LoginResponse> AzureAdLoginAsync(string accessToken)
+        {
+            var principal = await ValidateAzureAdTokenAsync(accessToken);
+            if (principal == null)
+                throw new InvalidOperationException("Invalid Azure AD token.");
+
+            var email = principal.FindFirst(ClaimTypes.Email)?.Value ?? principal.FindFirst("preferred_username")?.Value;
+            if (string.IsNullOrEmpty(email))
+                throw new InvalidOperationException("Email claim not found in Azure AD token.");
+
+            var user = await FindOrCreateExternalUserAsync(email);
+            var roles = await GetUserRolesAsync(user);
+
+            var token = GenerateJwtToken(user, roles);
+            var refreshToken = GenerateRefreshToken(user);
+
+            var refreshTokenEntity = new RefreshToken
+            {
+                Token = refreshToken,
+                UserId = user.Id,
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+
+            _dbContext.RefreshTokens.Add(refreshTokenEntity);
+            await _dbContext.SaveChangesAsync();
+
+            return new LoginResponse
+            {
+                Token = token,
+                RefreshToken = refreshToken,
+                UserName = user.UserName,
+                Roles = roles
+            };
         }
     }
 }

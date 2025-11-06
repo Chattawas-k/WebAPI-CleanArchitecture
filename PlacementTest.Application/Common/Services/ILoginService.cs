@@ -1,5 +1,5 @@
-﻿using PlacementTest.Application.Features.LoginFeatures.Login;
-using PlacementTest.Application.Features.RefreshTokenFeatures.RefreshToken;
+﻿using PlacementTest.Application.Features.Auth.LoginFeatures.Login;
+using PlacementTest.Application.Features.Auth.RefreshTokenFeatures.RefreshToken;
 using PlacementTest.Domain.Entities;
 using System.Security.Claims;
 
@@ -16,5 +16,6 @@ namespace PlacementTest.Application.Common.Services
         string GenerateRefreshToken(User user);
 
         Task<ClaimsPrincipal?> ValidateAzureAdTokenAsync(string accessToken);
+        Task<LoginResponse> AzureAdLoginAsync(string accessToken);
     }
 }

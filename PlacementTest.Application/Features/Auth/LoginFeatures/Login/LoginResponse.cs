@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PlacementTest.Application.Features.LoginFeatures.Login
+namespace PlacementTest.Application.Features.Auth.LoginFeatures.Login
 {
     public class LoginResponse
     {

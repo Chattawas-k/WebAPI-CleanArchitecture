@@ -1,30 +1,31 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PlacementTest.Application.Common.Services;
-using PlacementTest.Application.Features.LoginFeatures.Login;
-using PlacementTest.Application.Features.RefreshTokenFeatures.RefreshToken;
 using PlacementTest.Application.Features.UserFeatures.Add;
 using PlacementTest.WebAPI.Controllers.Base;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using PlacementTest.Application.Features.Auth.LoginFeatures.AzureAd;
+using PlacementTest.Application.Features.Auth.LoginFeatures.Login;
+using PlacementTest.Application.Features.Auth.RefreshTokenFeatures.RefreshToken;
 
 namespace PlacementTest.WebAPI.Controllers
 {
     public class AuthController : BaseController
     {
-        private readonly ILoginService _loginService;
+        private readonly IMediator _mediator;
 
-        public AuthController(ILoginService loginService)
+        public AuthController(IMediator mediator)
         {
-            _loginService = loginService;
+            _mediator = mediator;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var response = await _loginService.LoginAsync(request);
+            var response = await _mediator.Send(request);
             if (response == null)
                 return Unauthorized();
 
@@ -32,16 +33,16 @@ namespace PlacementTest.WebAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] AddUserRequest request, [FromServices] IMediator mediator)
+        public async Task<IActionResult> Register([FromBody] AddUserRequest request)
         {
-            var response = await mediator.Send(request);
+            var response = await _mediator.Send(request);
             return Ok(response);
         }
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            var response = await _loginService.RefreshTokenAsync(request);
+            var response = await _mediator.Send(request);
             if (response == null)
                 return Unauthorized();
             return Ok(response);
@@ -51,37 +52,14 @@ namespace PlacementTest.WebAPI.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> AzureAdLogin([FromBody] AzureAdLoginRequest request)
         {
-            // Validate Azure AD token
-            var principal = await _loginService.ValidateAzureAdTokenAsync(request.AccessToken);
-            if (principal == null)
+            var response = await _mediator.Send(request);
+            if (response == null)
                 return Unauthorized();
-
-            // Extract email or unique identifier from claims
-            var email = principal.FindFirst(ClaimTypes.Email)?.Value ?? principal.FindFirst("preferred_username")?.Value;
-            if (string.IsNullOrEmpty(email))
-                return Unauthorized();
-
-            // Find or create local user
-            var user = await _loginService.FindOrCreateExternalUserAsync(email);
-
-            // Get roles
-            var roles = await _loginService.GetUserRolesAsync(user);
-
-            // Issue your own JWT/refresh tokens
-            var token = _loginService.GenerateJwtToken(user, roles);
-            var refreshToken = _loginService.GenerateRefreshToken(user);
-
-            return Ok(new LoginResponse
-            {
-                Token = token,
-                RefreshToken = refreshToken,
-                UserName = user.UserName,
-                Roles = roles
-            });
+            return Ok(response);
         }
-        }
+    }
 
-    public class AzureAdLoginRequest
+    public class AzureAdLoginRequestDto
     {
         public required string AccessToken { get; set; }
     }
