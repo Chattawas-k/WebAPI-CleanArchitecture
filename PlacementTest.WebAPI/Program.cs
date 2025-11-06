@@ -5,6 +5,9 @@ using PlacementTest.Persistence;
 using PlacementTest.Persistence.Context;
 using PlacementTest.WebAPI.Extensions;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using PlacementTest.Domain.Entities;
+using PlacementTest.Persistence.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +53,27 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+    try
+    {
+        var userManager = services.GetRequiredService<UserManager<User>>();
+        var roleManager = services.GetRequiredService<RoleManager<Role>>();
+
+        await DefaultRoles.SeedAsync(userManager, roleManager);
+        await DefaultSuperAdmin.SeedAsync(userManager, roleManager);
+        await DefaultAdmin.SeedAsync(userManager, roleManager);
+        await DefaultBasicUser.SeedAsync(userManager, roleManager);
+    }
+    catch (Exception ex)
+    {
+        var logger = loggerFactory.CreateLogger<Program>();
+        logger.LogError(ex, "An error occurred seeding the DB.");
+    }
+}
 
 var serviceScope = app.Services.CreateScope();
 var dataContext = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
