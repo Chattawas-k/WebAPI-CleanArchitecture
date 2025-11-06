@@ -4,11 +4,12 @@
     {
         public BadRequestException(string message) : base(message)
         {
+            Errors = Array.Empty<string>(); // Initialize Errors to an empty array to satisfy non-nullable requirement.  
         }
 
         public BadRequestException(string[] errors) : base("Multiple errors occurred. See error details.")
         {
-            Errors = errors;
+            Errors = errors ?? Array.Empty<string>(); // Ensure Errors is never null.  
         }
 
         public string[] Errors { get; set; }

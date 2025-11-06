@@ -9,6 +9,6 @@ namespace PlacementTest.Application.Features.TestTakersFeatures
     public sealed record class AddTestTakerResponse
     {
         public Guid ID { get; set; }
-        public string BannerID { get; set; }
+        public string? BannerID { get; set; }
     }
 }

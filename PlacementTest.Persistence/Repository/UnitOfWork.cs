@@ -10,9 +10,9 @@ namespace PlacementTest.Persistence.Repository
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private readonly PlacementTestContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public UnitOfWork(PlacementTestContext context)
+        public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
         }

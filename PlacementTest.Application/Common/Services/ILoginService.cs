@@ -1,0 +1,20 @@
+﻿using PlacementTest.Application.Features.LoginFeatures.Login;
+using PlacementTest.Application.Features.RefreshTokenFeatures.RefreshToken;
+using PlacementTest.Domain.Entities;
+using System.Security.Claims;
+
+namespace PlacementTest.Application.Common.Services
+{
+    public interface ILoginService
+    {
+        Task<LoginResponse> LoginAsync(LoginRequest request);
+        Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request);
+
+        Task<User> FindOrCreateExternalUserAsync(string email);
+        Task<IList<string>> GetUserRolesAsync(User user);
+        string GenerateJwtToken(User user, IList<string> roles);
+        string GenerateRefreshToken(User user);
+
+        Task<ClaimsPrincipal?> ValidateAzureAdTokenAsync(string accessToken);
+    }
+}

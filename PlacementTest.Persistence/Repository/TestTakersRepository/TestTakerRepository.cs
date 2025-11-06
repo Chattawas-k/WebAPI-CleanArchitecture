@@ -12,13 +12,18 @@ namespace PlacementTest.Persistence.Repository.TestTakersRepository
 {
     public class TestTakerRepository : BaseRepository<TestTakers>, ITestTakerRepository
     {
-        public TestTakerRepository(PlacementTestContext context) : base(context)
+        public TestTakerRepository(ApplicationDbContext context) : base(context)
         {
         }
 
-        public Task<TestTakers> GetByID(string BannerID, CancellationToken cancellationToken)
+        public async Task<TestTakers> GetByID(string BannerID, CancellationToken cancellationToken)
         {
-            return Context.TestTakers.FirstOrDefaultAsync(x => x.BannerID == BannerID, cancellationToken);
+            var testTaker = await Context.TestTakers.FirstOrDefaultAsync(x => x.BannerID == BannerID, cancellationToken);
+            if (testTaker == null)
+            {
+                throw new InvalidOperationException($"TestTaker with BannerID '{BannerID}' not found.");
+            }
+            return testTaker;
         }
     }
 }
