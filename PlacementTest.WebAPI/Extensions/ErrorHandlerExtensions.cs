@@ -27,11 +27,28 @@ namespace PlacementTest.WebAPI.Extensions
                         _ => (int)HttpStatusCode.InternalServerError
                     };
 
-                    var errorResponse = new
+                    var exception = contextFeature.Error;
+                    var badRequestErrors = (exception as BadRequestException)?.Errors;
+
+                    object errorResponse;
+
+                    if (badRequestErrors != null && badRequestErrors.Length > 0)
                     {
-                        statusCode = context.Response.StatusCode,
-                        message = contextFeature.Error.GetBaseException().Message
-                    };
+                        errorResponse = new
+                        {
+                            statusCode = context.Response.StatusCode,
+                            message = exception.GetBaseException().Message,
+                            errors = badRequestErrors
+                        };
+                    }
+                    else
+                    {
+                        errorResponse = new
+                        {
+                            statusCode = context.Response.StatusCode,
+                            message = exception.GetBaseException().Message
+                        };
+                    }
 
                     await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
                 });
